@@ -44,13 +44,13 @@ Commodity futures often trade within **range-bound regimes** driven by seasonal 
 An entry signal is triggered when the asset price deviates significantly from its rolling mean:
 
 \[
-P_t < \mu - (k \cdot \sigma)
+P_t < μ - (k × σ)
 \]
 
 Where:
-- \(\mu\) = 20-day Simple Moving Average  
-- \(\sigma\) = Rolling standard deviation  
-- \(k\) = Threshold multiplier (set to 2.0, approximating a 95% confidence interval)
+- **μ** = 20-day Simple Moving Average  
+- **σ** = Rolling standard deviation  
+- **k** = Threshold multiplier (set to 2.0, approximating a 95% confidence interval)
 
 ---
 
