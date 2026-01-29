@@ -43,9 +43,7 @@ Commodity futures often trade within **range-bound regimes** driven by seasonal 
 
 An entry signal is triggered when the asset price deviates significantly from its rolling mean:
 
-\[
-P_t < μ - (k × σ)
-\]
+**P_t < μ - (k × σ)**
 
 Where:
 - **μ** = 20-day Simple Moving Average  
