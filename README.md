@@ -81,7 +81,7 @@ The framework produces a comprehensive suite of **quant-first performance metric
 
 Clone the repository:
 ```bash
-git clone https://github.com/oegozutok/commodity-alpha.git
+git clone https://github.com/oegozutok/Backtesting
 ````
 
 Install dependencies:
