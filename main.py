@@ -1,51 +1,48 @@
 import yfinance as yf
 import vectorbt as vbt
 import pandas as pd
-import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-
-# 1. DATA ACQUISITION: Energy, Agriculture, and the USD Index (Macro Factor)
-symbols = ["CL=F", "ZC=F", "ZS=F", "DX-Y.NYB"] 
-data = yf.download(symbols, start="2023-01-01", end="2026-01-29")['Close']
-
-# 2. FEATURE ENGINEERING: Technical Indicators
-# Bollinger Bands (20-day, 2 Std Dev)
-bbands = vbt.BBANDS.run(data, window=20, alpha=2)
-# RSI (14-day)
-rsi = vbt.RSI.run(data, window=14)
-# ATR for Volatility (14-day)
-atr = vbt.ATR.run(data['CL=F'], data['CL=F'], data['CL=F'], window=14) # Example for Oil
-
-# 3. STRATEGY LOGIC: Mean Reversion
-# LONG: Price crosses BELOW Lower Band AND RSI is Oversold (<30)
-entries = (data < bbands.lower) & (rsi.rsi < 30)
-# EXIT: Price crosses ABOVE Upper Band OR RSI is Overbought (>70)
-exits = (data > bbands.upper) | (rsi.rsi > 70)
-
-# 4. SIMULATION: Vectorized Portfolio
-# Adding 0.15% slippage/commissions to be realistic for Commodities
-pf = vbt.Portfolio.from_signals(
-    data, entries, exits, 
-    init_cash=100000, 
-    fees=0.0015, 
-    slippage=0.001,
-    freq='D'
+# 1. DATA
+symbols = ["CL=F", "ZC=F", "ZS=F"]
+raw = yf.download(
+    symbols,
+    start="2023-01-01",
+    end="2026-01-29",
+    auto_adjust=True
 )
-
-# 5. ADVANCED ANALYSES
-print("--- STRATEGY PERFORMANCE ---")
+data = raw["Close"].dropna()
+data.columns = data.columns.astype(str)
+print(f"Data shape: {data.shape}")
+print(f"Data columns: {data.columns.tolist()}")
+# 2. INDICATORS - Use default parameters (window=20, std=2 are defaults)
+bbands = vbt.BBANDS.run(data)
+rsi = vbt.RSI.run(data)
+# 3. Align column names by extracting values and recreating DataFrames
+bb_lower = pd.DataFrame(bbands.lower.values, index=data.index, columns=data.columns)
+bb_upper = pd.DataFrame(bbands.upper.values, index=data.index, columns=data.columns)
+rsi_val = pd.DataFrame(rsi.rsi.values, index=data.index, columns=data.columns)
+# 4. SIGNALS
+entries = (data < bb_lower) & (rsi_val < 30)
+exits = (data > bb_upper) | (rsi_val > 70)
+# 5. BACKTEST
+pf = vbt.Portfolio.from_signals(
+    data,
+    entries,
+    exits,
+    init_cash=100_000,
+    fees=0.0015,
+    slippage=0.001,
+    freq="D"
+)
+# 6. RESULTS
+print("\n--- STRATEGY PERFORMANCE ---")
 print(pf.stats())
-
-# 6. VISUALIZATIONS
-# A. Equity Curve (Cumulative Returns)
 pf.plot().show()
-
-# B. Correlation Matrix: How do these commodities move together?
-plt.figure(figsize=(10,6))
-sns.heatmap(data.pct_change().corr(), annot=True, cmap='coolwarm')
+# Correlation heatmap
+plt.figure(figsize=(10, 6))
+sns.heatmap(data.pct_change().corr(), annot=True, cmap="RdYlGn", center=0)
 plt.title("Commodity Returns Correlation Matrix")
+plt.tight_layout()
 plt.show()
-
-# C. Drawdown Analysis (Underwater Plot)
-pf.drawdowns.plot().show()
+print(f"\nAverage Portfolio Return: {pf.total_return().mean() * 100:.2f}%")
