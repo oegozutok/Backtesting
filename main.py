@@ -38,13 +38,12 @@ pf = vbt.Portfolio.from_signals(
 # 6. RESULTS
 print("\n--- STRATEGY PERFORMANCE ---")
 print(pf.stats())
-# FIX: Plot each symbol separately
-fig, axes = plt.subplots(len(data.columns), 1, figsize=(12, 4 * len(data.columns)))
-for i, col in enumerate(data.columns):
-    pf[col].plot(ax=axes[i], title=f"Portfolio: {col}")
-plt.tight_layout()
-plt.show()
-# Correlation heatmap
+# Plot each symbol separately (Plotly figures)
+for col in data.columns:
+    fig = pf[col].plot()
+    fig.update_layout(title=f"Portfolio: {col}")
+    fig.show()
+# Correlation heatmap (matplotlib)
 plt.figure(figsize=(10, 6))
 sns.heatmap(data.pct_change().corr(), annot=True, cmap="RdYlGn", center=0)
 plt.title("Commodity Returns Correlation Matrix")
